@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #eeede6;
+    --paper-raised: #f6f5f0;
+    --ink: #262620;
+    --ink-soft: #6b6a5f;
+    --rule: #d8d5c9;
+    --moss: #4b6350;
+    --moss-soft: #e3e8e0;
+    --ochre: #a8823d;
+    --ochre-soft: #f1e7d2;
+    --rust: #9c5b4a;
+    --radius: 3px;
+  }
+
+  * { box-sizing: border-box; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+  }
+
+  header.top h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+
+  .streak-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align: right;
+    line-height: 1.4;
+  }
+  .streak-badge strong {
+    color: var(--moss);
+    font-weight: 500;
+  }
+
+  nav.tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  nav.tabs button {
+    appearance: none;
+    background: none;
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-soft);
+    padding: 10px 4px;
+    margin-right: 22px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transform: translateY(1px);
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+
+  nav.tabs button.active {
+    color: var(--ink);
+    border-bottom-color: var(--moss);
+  }
+
+  nav.tabs button:hover:not(.active) {
+    color: var(--ink);
+  }
+
+  .view { display: none; }
+  .view.active {
+    display: block;
+    animation: fade 0.2s ease;
+  }
+
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ---- Today view ---- */
+
+  .today-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 28px 26px;
+  }
+
+  .today-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  .today-topic {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    font-weight: 500;
+    line-height: 1.25;
+    margin: 0 0 22px;
+  }
+
+  .today-empty {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink-soft);
+  }
+  .today-empty a { color: var(--moss); cursor: pointer; text-decoration: underline; }
+
+  .btn {
+    appearance: none;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 11px 20px;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary {
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+  }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink-soft); }
+
+  .note-area {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+  }
+  .note-area.open { max-height: 200px; }
+
+  .note-area textarea {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px 14px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper);
+    color: var(--ink);
+    resize: none;
+    min-height: 70px;
+  }
+  .note-area textarea:focus {
+    outline: none;
+    border-color: var(--moss);
+  }
+
+  .row-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .stamp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .stamp {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    color: var(--moss);
+    border: 1.5px solid var(--moss);
+    border-radius: var(--radius);
+    padding: 4px 9px;
+    transform: rotate(-3deg);
+    display: inline-block;
+  }
+
+  .logged-note {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .logged-time {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+
+  /* ---- Plan view ---- */
+
+  .plan-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    gap: 14px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .plan-row:last-of-type { border-bottom: none; }
+
+  .plan-day-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    line-height: 1.4;
+  }
+  .plan-day-label strong {
+    display: block;
+    font-size: 13px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .plan-row input {
+    width: 100%;
+    padding: 9px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    background: var(--paper-raised);
+    color: var(--ink);
+  }
+  .plan-row input:focus {
+    outline: none;
+    border-color: var(--moss);
+  }
+
+  .plan-actions {
+    margin-top: 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .save-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--moss);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .save-status.show { opacity: 1; }
+
+  /* ---- History view ---- */
+
+  .history-list { display: flex; flex-direction: column; }
+
+  .history-row {
+    display: grid;
+    grid-template-columns: 78px 1fr 60px;
+    gap: 14px;
+    align-items: start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .history-row:last-child { border-bottom: none; }
+
+  .history-date {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding-top: 2px;
+  }
+
+  .history-topic { font-size: 14px; }
+  .history-topic .empty { color: var(--ink-soft); font-style: italic; }
+  .history-note {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+  }
+
+  .mark {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    text-align: right;
+  }
+  .mark.done { color: var(--moss); }
+  .mark.gap { color: var(--rust); }
+  .mark.none { color: var(--rule); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 13px;
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header class="top">
+    <h1>Study Log</h1>
+    <div class="streak-badge" id="streakBadge">···</div>
+  </header>
+
+  <nav class="tabs">
+    <button class="active" data-view="today">Today</button>
+    <button data-view="plan">Plan week</button>
+    <button data-view="history">History</button>
+  </nav>
+
+  <section class="view active" id="view-today"></section>
+  <section class="view" id="view-plan"></section>
+  <section class="view" id="view-history"></section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = ""; // same-origin
+const IST_TIME_ZONE = "Asia/Kolkata";
+
+function istToday() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: IST_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function dateFromIso(iso) {
+  return new Date(`${iso}T00:00:00Z`);
+}
+
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2200);
+}
+
+function fmtDate(d) {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+}
+
+function displayDate(iso) {
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone: "UTC",
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(dateFromIso(iso));
+}
+
+function shortDate(iso) {
+  return new Intl.DateTimeFormat(undefined, {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+  }).format(dateFromIso(iso));
+}
+
+function formatIstTime(timestamp) {
+  const hasTimeZone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(timestamp);
+  const date = new Date(hasTimeZone ? timestamp : `${timestamp}Z`);
+  return date.toLocaleTimeString("en-IN", {
+    timeZone: IST_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+// ---------- Tabs ----------
+
+const tabs = document.querySelectorAll("nav.tabs button");
+const views = {
+  today: document.getElementById("view-today"),
+  plan: document.getElementById("view-plan"),
+  history: document.getElementById("view-history"),
+};
+
+tabs.forEach(btn => {
+  btn.addEventListener("click", () => {
+    tabs.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    Object.values(views).forEach(v => v.classList.remove("active"));
+    const view = btn.dataset.view;
+    views[view].classList.add("active");
+    if (view === "plan") renderPlan();
+    if (view === "history") renderHistory();
+  });
+});
+
+// ---------- Streak ----------
+
+async function renderStreak() {
+  try {
+    const r = await fetch(`${API}/streak`);
+    const s = await r.json();
+    const badge = document.getElementById("streakBadge");
+    badge.innerHTML = `<strong>${s.current_streak}</strong> day streak<br>${s.total_logged} logged total`;
+  } catch (e) {
+    document.getElementById("streakBadge").textContent = "";
+  }
+}
+
+// ---------- Today ----------
+
+async function renderToday() {
+  const el = views.today;
+  el.innerHTML = `<div class="today-card"><p class="today-empty">Loading…</p></div>`;
+
+  let today;
+  try {
+    const r = await fetch(`${API}/today`);
+    today = await r.json();
+  } catch (e) {
+    el.innerHTML = `<div class="today-card"><p class="today-empty">Couldn't reach the server. Is it running?</p></div>`;
+    return;
+  }
+
+  const dateLabel = displayDate(today.date);
+
+  if (!today.topic) {
+    el.innerHTML = `
+      <div class="today-card">
+        <div class="today-date">${dateLabel}</div>
+        <p class="today-empty">Nothing planned for today yet. <a data-goto="plan">Set this week's plan →</a></p>
+      </div>`;
+    el.querySelector('[data-goto="plan"]').addEventListener("click", () => {
+      document.querySelector('[data-view="plan"]').click();
+    });
+    return;
+  }
+
+  if (today.logged) {
+    el.innerHTML = `
+      <div class="today-card">
+        <div class="today-date">${dateLabel}</div>
+        <h2 class="today-topic">${escapeHtml(today.topic)}</h2>
+        <div class="stamp-row">
+          <span class="stamp">LOGGED</span>
+          <span class="logged-time">${formatIstTime(today.log.logged_at)}</span>
+        </div>
+        ${today.log.note ? `<p class="logged-note" style="margin-top:14px;">${escapeHtml(today.log.note)}</p>` : ""}
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="today-card">
+      <div class="today-date">${dateLabel}</div>
+      <h2 class="today-topic">${escapeHtml(today.topic)}</h2>
+      <button class="btn btn-primary" id="logBtn">Log today</button>
+      <div class="note-area" id="noteArea">
+        <textarea id="noteInput" placeholder="Optional note — what did you cover?"></textarea>
+        <div class="row-actions">
+          <button class="btn btn-primary" id="confirmLog">Confirm</button>
+          <button class="btn btn-secondary" id="cancelLog">Cancel</button>
+        </div>
+      </div>
+    </div>`;
+
+  const logBtn = document.getElementById("logBtn");
+  const noteArea = document.getElementById("noteArea");
+  logBtn.addEventListener("click", () => {
+    noteArea.classList.add("open");
+    logBtn.style.display = "none";
+    document.getElementById("noteInput").focus();
+  });
+  document.getElementById("cancelLog").addEventListener("click", () => {
+    noteArea.classList.remove("open");
+    logBtn.style.display = "inline-block";
+  });
+  document.getElementById("confirmLog").addEventListener("click", async () => {
+    const note = document.getElementById("noteInput").value.trim();
+    try {
+      const r = await fetch(`${API}/log`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(note ? { note } : {}),
+      });
+      if (!r.ok) {
+        const err = await r.json();
+        toast(err.detail || "Couldn't log today.");
+        return;
+      }
+      toast("Logged.");
+      renderToday();
+      renderStreak();
+    } catch (e) {
+      toast("Couldn't reach the server.");
+    }
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ---------- Plan ----------
+
+function currentWeekDates() {
+  const today = dateFromIso(istToday());
+  const day = today.getUTCDay(); // 0 = Sun
+  const monday = new Date(today);
+  const diff = day === 0 ? -6 : 1 - day;
+  monday.setUTCDate(today.getUTCDate() + diff);
+  const dates = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday);
+    d.setUTCDate(monday.getUTCDate() + i);
+    dates.push(d);
+  }
+  return dates;
+}
+
+async function renderPlan() {
+  const el = views.plan;
+  const dates = currentWeekDates();
+  const start = fmtDate(dates[0]);
+  const end = fmtDate(dates[6]);
+
+  let existing = [];
+  try {
+    const r = await fetch(`${API}/weekly-plan?start=${start}&end=${end}`);
+    existing = await r.json();
+  } catch (e) { /* fine, just start blank */ }
+
+  const existingMap = {};
+  existing.forEach(p => existingMap[p.date] = p.topic);
+
+  const rows = dates.map(d => {
+    const iso = fmtDate(d);
+    const label = d.toLocaleDateString(undefined, { timeZone: "UTC", weekday: "short" });
+    const dayNum = d.getUTCDate();
+    const value = existingMap[iso] || "";
+    return `
+      <div class="plan-row">
+        <div class="plan-day-label">${label}<strong>${dayNum}</strong></div>
+        <input type="text" data-date="${iso}" placeholder="Topic for this day…" value="${escapeHtml(value)}">
+      </div>`;
+  }).join("");
+
+  el.innerHTML = `
+    <div class="today-card">
+      <div class="today-date">This week's plan</div>
+      ${rows}
+      <div class="plan-actions">
+        <button class="btn btn-primary" id="savePlan">Save week</button>
+        <span class="save-status" id="saveStatus">Saved</span>
+      </div>
+    </div>`;
+
+  document.getElementById("savePlan").addEventListener("click", async () => {
+    const inputs = el.querySelectorAll("input[data-date]");
+    const days = [];
+    const delete_dates = [];
+    inputs.forEach(inp => {
+      const topic = inp.value.trim();
+      if (topic) days.push({ date: inp.dataset.date, topic });
+      else delete_dates.push(inp.dataset.date);
+    });
+    try {
+      const r = await fetch(`${API}/weekly-plan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days, delete_dates }),
+      });
+      if (!r.ok) { toast("Couldn't save the plan."); return; }
+      const status = document.getElementById("saveStatus");
+      status.classList.add("show");
+      setTimeout(() => status.classList.remove("show"), 1800);
+      renderToday();
+    } catch (e) {
+      toast("Couldn't reach the server.");
+    }
+  });
+}
+
+// ---------- History ----------
+
+async function renderHistory() {
+  const el = views.history;
+  el.innerHTML = `<div class="today-card"><p class="today-empty">Loading…</p></div>`;
+
+  let history = [];
+  try {
+    const r = await fetch(`${API}/history?days=30`);
+    history = await r.json();
+  } catch (e) {
+    el.innerHTML = `<div class="today-card"><p class="today-empty">Couldn't reach the server.</p></div>`;
+    return;
+  }
+
+  const withPlans = history.filter(h => h.planned_topic);
+  if (withPlans.length === 0) {
+    el.innerHTML = `<div class="today-card empty-state">No history yet. Set a plan and log your first day.</div>`;
+    return;
+  }
+
+  const rows = withPlans.map(h => {
+    let mark, markClass;
+    if (h.logged) { mark = "●"; markClass = "done"; }
+    else {
+      const isPast = h.date < istToday();
+      mark = isPast ? "—" : "";
+      markClass = isPast ? "gap" : "none";
+    }
+    return `
+      <div class="history-row">
+        <div class="history-date">${shortDate(h.date)}</div>
+        <div class="history-topic">
+          ${escapeHtml(h.planned_topic)}
+          ${h.note ? `<div class="history-note">${escapeHtml(h.note)}</div>` : ""}
+        </div>
+        <div class="mark ${markClass}">${mark}</div>
+      </div>`;
+  }).join("");
+
+  el.innerHTML = `<div class="today-card"><div class="history-list">${rows}</div></div>`;
+}
+
+// ---------- Init ----------
+
+renderToday();
+renderStreak();
+</script>
+</body>
+</html>
