@@ -377,6 +377,27 @@
 const API = ""; // same-origin
 const IST_TIME_ZONE = "Asia/Kolkata";
 
+function getToken() {
+  let t = localStorage.getItem("studyToken");
+  if (!t) {
+    t = prompt("Enter your access token");
+    if (t) localStorage.setItem("studyToken", t.trim());
+  }
+  return t;
+}
+
+async function api(path, options = {}) {
+  const res = await api(`${path}`, {
+    ...options,
+    headers: { ...(options.headers || {}), "X-API-Token": getToken() || "" },
+  });
+  if (res.status === 401) {
+    localStorage.removeItem("studyToken");
+    toast("Wrong token. Reload and enter it again.");
+  }
+  return res;
+}
+
 function istToday() {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: IST_TIME_ZONE,
@@ -455,7 +476,7 @@ tabs.forEach(btn => {
 
 async function renderStreak() {
   try {
-    const r = await fetch(`${API}/streak`);
+    const r = await api(`/streak`);
     const s = await r.json();
     const badge = document.getElementById("streakBadge");
     badge.innerHTML = `<strong>${s.current_streak}</strong> day streak<br>${s.total_logged} logged total`;
@@ -472,7 +493,7 @@ async function renderToday() {
 
   let today;
   try {
-    const r = await fetch(`${API}/today`);
+    const r = await api(`/today`);
     today = await r.json();
   } catch (e) {
     el.innerHTML = `<div class="today-card"><p class="today-empty">Couldn't reach the server. Is it running?</p></div>`;
@@ -535,7 +556,7 @@ async function renderToday() {
   document.getElementById("confirmLog").addEventListener("click", async () => {
     const note = document.getElementById("noteInput").value.trim();
     try {
-      const r = await fetch(`${API}/log`, {
+      const r = await api(`/log`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(note ? { note } : {}),
@@ -585,7 +606,7 @@ async function renderPlan() {
 
   let existing = [];
   try {
-    const r = await fetch(`${API}/weekly-plan?start=${start}&end=${end}`);
+    const r = await api(`/weekly-plan?start=${start}&end=${end}`);
     existing = await r.json();
   } catch (e) { /* fine, just start blank */ }
 
@@ -624,7 +645,7 @@ async function renderPlan() {
       else delete_dates.push(inp.dataset.date);
     });
     try {
-      const r = await fetch(`${API}/weekly-plan`, {
+      const r = await api(`/weekly-plan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ days, delete_dates }),
@@ -648,7 +669,7 @@ async function renderHistory() {
 
   let history = [];
   try {
-    const r = await fetch(`${API}/history?days=30`);
+    const r = await api(`/history?days=30`);
     history = await r.json();
   } catch (e) {
     el.innerHTML = `<div class="today-card"><p class="today-empty">Couldn't reach the server.</p></div>`;

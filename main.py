@@ -1,10 +1,12 @@
 from datetime import date, datetime, timedelta, timezone
 from typing import List
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Header
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+import os
+import secrets
 
 import models
 import schemas
@@ -12,7 +14,17 @@ from database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="Study Tracker MVP")
+API_TOKEN = os.getenv("API_TOKEN")
+
+
+def verify_token(x_api_token: str = Header(default="")):
+    if API_TOKEN and not secrets.compare_digest(
+        x_api_token.encode(), API_TOKEN.encode()
+    ):
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+
+app = FastAPI(title="Study Tracker MVP", dependencies=[Depends(verify_token)])
 
 
 def ist_today() -> date:
